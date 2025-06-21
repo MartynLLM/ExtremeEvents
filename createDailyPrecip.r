@@ -5,10 +5,12 @@
 #'
 #' @param input_file Path to the input CSV file (default: "short.csv")
 #' @param output_file Path to the output CSV file (default: "daily_precipitation.csv")
+#' @param threshold Minimum threshold for precipitation (default: 0.1 mm)
 #' @return A data frame with Date and daily Precipitation totals
 
-aggregate_daily_precipitation <- function(input_file = "precip.csv", 
-                                        output_file = "dailyPrecipitation.csv") {
+aggregate_daily_precipitation <- function(input_file = "short.csv", 
+                                        output_file = "daily_precipitation.csv",
+                                        threshold = 0.1) {
   
   # Load required library
   if (!require(lubridate)) {
@@ -50,8 +52,14 @@ aggregate_daily_precipitation <- function(input_file = "precip.csv",
   # Sort by date
   daily_precip <- daily_precip[order(daily_precip$Date), ]
   
+  # Apply threshold and rounding
+  cat("Applying threshold (", threshold, " mm) and rounding...\n")
+  daily_precip$Precipitation <- ifelse(daily_precip$Precipitation >= threshold,
+                                      round(daily_precip$Precipitation, 1),
+                                      0)
+  
   # Write results to output file
-  write.csv(daily_precip, output_file, row.names = FALSE)
+  write.csv(daily_precip, output_file, row.names = TRUE)
   
   # Print summary statistics
   cat("\n=== SUMMARY ===\n")
@@ -60,7 +68,9 @@ aggregate_daily_precipitation <- function(input_file = "precip.csv",
   cat("Date range:", as.character(min(daily_precip$Date)), "to", as.character(max(daily_precip$Date)), "\n")
   cat("Total precipitation:", round(sum(daily_precip$Precipitation, na.rm = TRUE), 2), "\n")
   cat("Average daily precipitation:", round(mean(daily_precip$Precipitation, na.rm = TRUE), 2), "\n")
-  cat("Days with precipitation > 0:", sum(daily_precip$Precipitation > 0, na.rm = TRUE), "\n")
+  cat("Days with precipitation >= threshold (", threshold, " mm):", sum(daily_precip$Precipitation > 0, na.rm = TRUE), "\n")
+  cat("Days set to 0 (below threshold):", sum(daily_precip$Precipitation == 0, na.rm = TRUE), "\n")
+  cat("Threshold used:", threshold, " mm\n")
   cat("Output saved to:", output_file, "\n")
   
   return(daily_precip)
@@ -70,8 +80,8 @@ aggregate_daily_precipitation <- function(input_file = "precip.csv",
 # Use default file names
 # result <- aggregate_daily_precipitation()
 
-# Use custom file names
-# result <- aggregate_daily_precipitation("my_input_file.csv", "my_daily_output.csv")
+# Use custom file names and threshold
+# result <- aggregate_daily_precipitation("my_input_file.csv", "my_daily_output.csv", 0.2)
 
 # Run the function with default parameters
 cat("Starting precipitation aggregation...\n")
