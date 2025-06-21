@@ -9,7 +9,7 @@
 #' @param threshold Minimum threshold for precipitation (default: 0.1 mm)
 #' @return A data frame with Date and daily Precipitation totals
 
-aggregate_daily_precipitation <- function(input_file = "short.csv", 
+aggregate_daily_precipitation <- function(input_file = "precip.csv", 
                                         output_file = "daily_precipitation.csv",
                                         threshold = 0.1) {
   
