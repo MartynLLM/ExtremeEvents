@@ -13,7 +13,7 @@
 calculate_stretched_precipitation <- function(input_file = "daily_precipitation.csv", 
                                              output_file = "precipitation_stretched.csv",
                                              threshold_percentile = 95,
-                                             stretch_amount = 1.0,
+                                             stretch_amount = 0.0,
                                              scaling_factor = 1.0) {
   
   # Read the input CSV file
@@ -76,7 +76,8 @@ calculate_stretched_precipitation <- function(input_file = "daily_precipitation.
                             (100 - threshold_percentile))^scaling_factor) * stretch_amount) * precip
         } else {
           # Formula for percentiles < threshold
-          stretched <- ((percentile / threshold_percentile)^scaling_factor) * precip
+          stretched <- (1 - sign(stretch_amount) * (((threshold_percentile - percentile) / 
+                                threshold_percentile)^scaling_factor)) * precip
         }
         
         result$StretchedPrecipitation[i] <- stretched
