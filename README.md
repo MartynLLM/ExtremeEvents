@@ -1,5 +1,5 @@
 # Extreme Event Simulation
-R code for extreme precipitation simulations
+R code for simulating extreme precipitation events including "skyfall" and droughts
 
 The "stretch" code implements the precipitation stretch algorithm described in [Laguna Marin (2022)](https://stud.epsilon.slu.se/18471/3/Laguna-Marin-c-20230119.pdf)
 
