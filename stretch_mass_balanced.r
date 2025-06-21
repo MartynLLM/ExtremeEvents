@@ -126,7 +126,7 @@ calculate_mass_balanced_stretched_precipitation <- function(input_file = "daily_
         "  },\n",
         "  \"generation_info\": {\n",
         "    \"date_generated\": \"", Sys.Date(), "\",\n",
-        "    \"timestamp_generated\": \"", Sys.Time(), "\",\n",
+        "    \"timestamp_generated\": \"", Sys.time(), "\",\n",
         "    \"r_version\": \"", R.version.string, "\"\n",
         "  }\n",
         "}"
@@ -260,6 +260,11 @@ calculate_mass_balanced_stretched_precipitation <- function(input_file = "daily_
   
   # Sort by date for the final output
   result <- result[order(result$Date), ]
+  
+  # Calculate final sums for verification
+  original_sum <- sum(result$Precipitation, na.rm = TRUE)
+  stretched_sum <- sum(result$StretchedPrecipitation, na.rm = TRUE)
+  mass_balance_error <- abs(stretched_sum - original_sum) / original_sum * 100
   
   # Write the complete result to the output file
   write.csv(result, output_file, row.names = FALSE)
