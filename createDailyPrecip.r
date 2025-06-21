@@ -7,8 +7,8 @@
 #' @param output_file Path to the output CSV file (default: "daily_precipitation.csv")
 #' @return A data frame with Date and daily Precipitation totals
 
-aggregate_daily_precipitation <- function(input_file = "short.csv", 
-                                        output_file = "precip.csv") {
+aggregate_daily_precipitation <- function(input_file = "precip.csv", 
+                                        output_file = "dailyPrecipitation.csv") {
   
   # Load required library
   if (!require(lubridate)) {
@@ -51,7 +51,7 @@ aggregate_daily_precipitation <- function(input_file = "short.csv",
   daily_precip <- daily_precip[order(daily_precip$Date), ]
   
   # Write results to output file
-  write.csv(daily_precip, output_file, row.names = TRUE)
+  write.csv(daily_precip, output_file, row.names = FALSE)
   
   # Print summary statistics
   cat("\n=== SUMMARY ===\n")
