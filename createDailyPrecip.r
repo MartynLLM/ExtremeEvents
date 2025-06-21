@@ -8,7 +8,7 @@
 #' @return A data frame with Date and daily Precipitation totals
 
 aggregate_daily_precipitation <- function(input_file = "short.csv", 
-                                        output_file = "dailyPrecipitation.csv") {
+                                        output_file = "precip.csv") {
   
   # Load required library
   if (!require(lubridate)) {
