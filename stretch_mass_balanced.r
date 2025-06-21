@@ -67,6 +67,74 @@ calculate_mass_balanced_stretched_precipitation <- function(input_file = "daily_
     
     write.csv(result, output_file, row.names = FALSE)
     cat("No stretching applied (stretch_amount = 0). Original data preserved.\n")
+    
+    # Create JSON metadata file for no-stretch case
+    json_file <- sub("\\.csv$", ".json", output_file)
+    metadata <- list(
+      parameters = list(
+        input_file = input_file,
+        output_file = output_file,
+        threshold_percentile = threshold_percentile,
+        stretch_amount = stretch_amount,
+        initial_scaling_factor = initial_scaling_factor,
+        tolerance = tolerance,
+        max_iterations = max_iterations
+      ),
+      results = list(
+        optimal_scaling_factor = 1.0,
+        original_precipitation_sum = target_sum,
+        stretched_precipitation_sum = target_sum,
+        mass_balance_error_percent = 0.0,
+        total_days = nrow(result),
+        days_with_precipitation = sum(result$Precipitation > 0),
+        days_without_precipitation = sum(result$Precipitation == 0),
+        mean_stretch_ratio = 1.0
+      ),
+      generation_info = list(
+        date_generated = Sys.Date(),
+        timestamp_generated = Sys.time(),
+        r_version = R.version.string
+      )
+    )
+    
+    # Write JSON metadata file
+    if(require(jsonlite, quietly = TRUE)) {
+      write_json(metadata, json_file, pretty = TRUE, auto_unbox = TRUE)
+      cat("Metadata saved to:", json_file, "\n")
+    } else {
+      # Fallback: write JSON manually if jsonlite is not available
+      json_content <- paste0(
+        "{\n",
+        "  \"parameters\": {\n",
+        "    \"input_file\": \"", input_file, "\",\n",
+        "    \"output_file\": \"", output_file, "\",\n",
+        "    \"threshold_percentile\": ", threshold_percentile, ",\n",
+        "    \"stretch_amount\": ", stretch_amount, ",\n",
+        "    \"initial_scaling_factor\": ", initial_scaling_factor, ",\n",
+        "    \"tolerance\": ", tolerance, ",\n",
+        "    \"max_iterations\": ", max_iterations, "\n",
+        "  },\n",
+        "  \"results\": {\n",
+        "    \"optimal_scaling_factor\": 1.0,\n",
+        "    \"original_precipitation_sum\": ", target_sum, ",\n",
+        "    \"stretched_precipitation_sum\": ", target_sum, ",\n",
+        "    \"mass_balance_error_percent\": 0.0,\n",
+        "    \"total_days\": ", nrow(result), ",\n",
+        "    \"days_with_precipitation\": ", sum(result$Precipitation > 0), ",\n",
+        "    \"days_without_precipitation\": ", sum(result$Precipitation == 0), ",\n",
+        "    \"mean_stretch_ratio\": 1.0\n",
+        "  },\n",
+        "  \"generation_info\": {\n",
+        "    \"date_generated\": \"", Sys.Date(), "\",\n",
+        "    \"timestamp_generated\": \"", Sys.Time(), "\",\n",
+        "    \"r_version\": \"", R.version.string, "\"\n",
+        "  }\n",
+        "}"
+      )
+      writeLines(json_content, json_file)
+      cat("Metadata saved to:", json_file, " (manual JSON format)\n")
+    }
+    
     return(result)
   }
   
@@ -195,6 +263,75 @@ calculate_mass_balanced_stretched_precipitation <- function(input_file = "daily_
   
   # Write the complete result to the output file
   write.csv(result, output_file, row.names = FALSE)
+  
+  # Create JSON metadata file
+  json_file <- sub("\\.csv$", ".json", output_file)
+  
+  # Prepare metadata
+  metadata <- list(
+    parameters = list(
+      input_file = input_file,
+      output_file = output_file,
+      threshold_percentile = threshold_percentile,
+      stretch_amount = stretch_amount,
+      initial_scaling_factor = initial_scaling_factor,
+      tolerance = tolerance,
+      max_iterations = max_iterations
+    ),
+    results = list(
+      optimal_scaling_factor = optimal_scaling_factor,
+      original_precipitation_sum = original_sum,
+      stretched_precipitation_sum = stretched_sum,
+      mass_balance_error_percent = mass_balance_error,
+      total_days = nrow(result),
+      days_with_precipitation = sum(result$Precipitation > 0),
+      days_without_precipitation = sum(result$Precipitation == 0),
+      mean_stretch_ratio = round(mean(result$StretchRatio, na.rm = TRUE), 6)
+    ),
+    generation_info = list(
+      date_generated = Sys.Date(),
+      timestamp_generated = Sys.time(),
+      r_version = R.version.string
+    )
+  )
+  
+  # Write JSON metadata file
+  if(require(jsonlite, quietly = TRUE)) {
+    write_json(metadata, json_file, pretty = TRUE, auto_unbox = TRUE)
+    cat("Metadata saved to:", json_file, "\n")
+  } else {
+    # Fallback: write JSON manually if jsonlite is not available
+    json_content <- paste0(
+      "{\n",
+      "  \"parameters\": {\n",
+      "    \"input_file\": \"", input_file, "\",\n",
+      "    \"output_file\": \"", output_file, "\",\n",
+      "    \"threshold_percentile\": ", threshold_percentile, ",\n",
+      "    \"stretch_amount\": ", stretch_amount, ",\n",
+      "    \"initial_scaling_factor\": ", initial_scaling_factor, ",\n",
+      "    \"tolerance\": ", tolerance, ",\n",
+      "    \"max_iterations\": ", max_iterations, "\n",
+      "  },\n",
+      "  \"results\": {\n",
+      "    \"optimal_scaling_factor\": ", optimal_scaling_factor, ",\n",
+      "    \"original_precipitation_sum\": ", original_sum, ",\n",
+      "    \"stretched_precipitation_sum\": ", stretched_sum, ",\n",
+      "    \"mass_balance_error_percent\": ", mass_balance_error, ",\n",
+      "    \"total_days\": ", nrow(result), ",\n",
+      "    \"days_with_precipitation\": ", sum(result$Precipitation > 0), ",\n",
+      "    \"days_without_precipitation\": ", sum(result$Precipitation == 0), ",\n",
+      "    \"mean_stretch_ratio\": ", round(mean(result$StretchRatio, na.rm = TRUE), 6), "\n",
+      "  },\n",
+      "  \"generation_info\": {\n",
+      "    \"date_generated\": \"", Sys.Date(), "\",\n",
+      "    \"timestamp_generated\": \"", Sys.time(), "\",\n",
+      "    \"r_version\": \"", R.version.string, "\"\n",
+      "  }\n",
+      "}"
+    )
+    writeLines(json_content, json_file)
+    cat("Metadata saved to:", json_file, " (manual JSON format)\n")
+  }
   
   # Calculate final sums for verification
   original_sum <- sum(result$Precipitation, na.rm = TRUE)
