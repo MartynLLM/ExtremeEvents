@@ -61,6 +61,67 @@ aggregate_daily_precipitation <- function(input_file = "precip.csv",
   # Write results to output file
   write.csv(daily_precip, output_file, row.names = TRUE)
   
+  # Create JSON metadata file
+  json_file <- sub("\\.csv$", ".json", output_file)
+  
+  # Prepare metadata
+  metadata <- list(
+    parameters = list(
+      input_file = input_file,
+      output_file = output_file,
+      threshold = threshold
+    ),
+    results = list(
+      input_records = nrow(data),
+      output_daily_records = nrow(daily_precip),
+      date_range_start = as.character(min(daily_precip$Date)),
+      date_range_end = as.character(max(daily_precip$Date)),
+      total_precipitation = round(sum(daily_precip$Precipitation, na.rm = TRUE), 2),
+      average_daily_precipitation = round(mean(daily_precip$Precipitation, na.rm = TRUE), 2),
+      days_with_precipitation = sum(daily_precip$Precipitation > 0, na.rm = TRUE),
+      days_set_to_zero = sum(daily_precip$Precipitation == 0, na.rm = TRUE)
+    ),
+    generation_info = list(
+      date_generated = Sys.Date(),
+      timestamp_generated = Sys.time(),
+      r_version = R.version.string
+    )
+  )
+  
+  # Write JSON metadata file
+  if(require(jsonlite, quietly = TRUE)) {
+    jsonlite::write_json(metadata, json_file, pretty = TRUE, auto_unbox = TRUE)
+    cat("Metadata saved to:", json_file, "\n")
+  } else {
+    # Fallback: write JSON manually if jsonlite is not available
+    json_content <- paste0(
+      "{\n",
+      "  \"parameters\": {\n",
+      "    \"input_file\": \"", input_file, "\",\n",
+      "    \"output_file\": \"", output_file, "\",\n",
+      "    \"threshold\": ", threshold, "\n",
+      "  },\n",
+      "  \"results\": {\n",
+      "    \"input_records\": ", nrow(data), ",\n",
+      "    \"output_daily_records\": ", nrow(daily_precip), ",\n",
+      "    \"date_range_start\": \"", as.character(min(daily_precip$Date)), "\",\n",
+      "    \"date_range_end\": \"", as.character(max(daily_precip$Date)), "\",\n",
+      "    \"total_precipitation\": ", round(sum(daily_precip$Precipitation, na.rm = TRUE), 2), ",\n",
+      "    \"average_daily_precipitation\": ", round(mean(daily_precip$Precipitation, na.rm = TRUE), 2), ",\n",
+      "    \"days_with_precipitation\": ", sum(daily_precip$Precipitation > 0, na.rm = TRUE), ",\n",
+      "    \"days_set_to_zero\": ", sum(daily_precip$Precipitation == 0, na.rm = TRUE), "\n",
+      "  },\n",
+      "  \"generation_info\": {\n",
+      "    \"date_generated\": \"", Sys.Date(), "\",\n",
+      "    \"timestamp_generated\": \"", Sys.time(), "\",\n",
+      "    \"r_version\": \"", R.version.string, "\"\n",
+      "  }\n",
+      "}"
+    )
+    writeLines(json_content, json_file)
+    cat("Metadata saved to:", json_file, " (manual JSON format)\n")
+  }
+  
   # Print summary statistics
   cat("\n=== SUMMARY ===\n")
   cat("Input records:", nrow(data), "\n")
