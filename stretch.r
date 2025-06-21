@@ -3,14 +3,14 @@
 #' This function processes precipitation data, calculates percentiles,
 #' and creates a "stretched" precipitation series based on specified parameters.
 #'
-#' @param input_file Path to the input CSV file (default: "dailyPrecipitation.csv")
+#' @param input_file Path to the input CSV file (default: "daily_precipitation.csv")
 #' @param output_file Path to the output CSV file (default: "precipitation_stretched.csv")
 #' @param threshold_percentile Percentile threshold for stretching (default: 95)
 #' @param stretch_amount Amount to stretch by in percentage (default: 1.0, representing 100%)
 #' @param scaling_factor Scaling factor for the stretching formula (default: 1.0)
 #' @return A data frame with Date, Precipitation, Percentile, StretchedPrecipitation, and StretchRatio columns
 #'
-calculate_stretched_precipitation <- function(input_file = "dailyPrecipitation.csv", 
+calculate_stretched_precipitation <- function(input_file = "daily_precipitation.csv", 
                                              output_file = "precipitation_stretched.csv",
                                              threshold_percentile = 95,
                                              stretch_amount = 1.0,

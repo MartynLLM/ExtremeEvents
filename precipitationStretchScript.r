@@ -8,8 +8,8 @@
 #' @param output_file Path to the output CSV file (default: "stretched_subdaily_precipitation.csv")
 #' @return A data frame with datetime, original precipitation, stretched precipitation, and stretch ratio
 
-apply_stretch_ratios <- function(daily_file = "shortStretch.csv",
-                                subdaily_file = "short.csv", 
+apply_stretch_ratios <- function(daily_file = "precipitation_stretched.csv",
+                                subdaily_file = "precip.csv", 
                                 output_file = "stretched_subdaily_precipitation.csv") {
   
   # Load required library
