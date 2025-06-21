@@ -102,19 +102,31 @@ apply_stretch_ratios <- function(daily_file = "precipitation_stretched.csv",
   cat("Merging data and applying stretch ratios...\n")
   merged_data <- merge(subdaily_data, daily_data, by.x = "date_only", by.y = "Date", all.x = TRUE)
   
+  # Handle column naming after merge (when both datasets have Precipitation columns)
+  if ("Precipitation.x" %in% names(merged_data)) {
+    # Rename columns for clarity
+    names(merged_data)[names(merged_data) == "Precipitation.x"] <- "SubdailyPrecipitation"
+    if ("Precipitation.y" %in% names(merged_data)) {
+      names(merged_data)[names(merged_data) == "Precipitation.y"] <- "DailyPrecipitation"
+    }
+    precip_col <- "SubdailyPrecipitation"
+    daily_precip_available <- "DailyPrecipitation" %in% names(merged_data)
+  } else {
+    # No column conflict - use original name
+    precip_col <- "Precipitation"
+    daily_precip_available <- "Precipitation" %in% names(daily_data)
+  }
+  
   # Initialize stretched precipitation column with original values
-  merged_data$StretchedPrecipitation <- merged_data$Precipitation
+  merged_data$StretchedPrecipitation <- merged_data[[precip_col]]
   
   # Apply stretch ratios only to non-zero precipitation values with valid stretch ratios
-  non_zero_mask <- merged_data$Precipitation > 0 & !is.na(merged_data$StretchRatio)
+  non_zero_mask <- merged_data[[precip_col]] > 0 & !is.na(merged_data$StretchRatio)
   merged_data$StretchedPrecipitation[non_zero_mask] <- 
-    merged_data$Precipitation[non_zero_mask] * merged_data$StretchRatio[non_zero_mask]
+    merged_data[[precip_col]][non_zero_mask] * merged_data$StretchRatio[non_zero_mask]
   
   # Apply sign(daily_value) correction if daily precipitation data is available
-  if ("Precipitation" %in% names(merged_data)) {
-    # Rename the daily precipitation column to avoid confusion
-    names(merged_data)[names(merged_data) == "Precipitation.y"] <- "DailyPrecipitation"
-    
+  if (daily_precip_available && "DailyPrecipitation" %in% names(merged_data)) {
     # Apply sign correction: multiply by sign of daily precipitation value
     # This ensures that days with 0 daily precipitation (below threshold) have 0 sub-daily values
     daily_sign <- sign(merged_data$DailyPrecipitation)
@@ -128,7 +140,7 @@ apply_stretch_ratios <- function(daily_file = "precipitation_stretched.csv",
   # Create final output dataframe with desired columns
   result <- data.frame(
     DateTime = merged_data$date,
-    OriginalPrecipitation = merged_data$Precipitation,
+    OriginalPrecipitation = merged_data[[precip_col]],
     StretchedPrecipitation = merged_data$StretchedPrecipitation,
     DailyStretchRatio = merged_data$StretchRatio
   )
@@ -174,7 +186,7 @@ apply_stretch_ratios <- function(daily_file = "precipitation_stretched.csv",
       total_stretched_precipitation = round(sum(result$StretchedPrecipitation, na.rm = TRUE), 6),
       average_stretch_ratio_nonzero = round(mean(result$DailyStretchRatio[result$OriginalPrecipitation > 0], na.rm = TRUE), 6),
       mass_balance_ratio = round(sum(result$StretchedPrecipitation, na.rm = TRUE) / sum(result$OriginalPrecipitation, na.rm = TRUE), 6),
-      sign_correction_applied = "Precipitation" %in% names(merged_data)
+      sign_correction_applied = daily_precip_available && "DailyPrecipitation" %in% names(merged_data)
     ),
     generation_info = list(
       date_generated = Sys.Date(),
@@ -212,7 +224,7 @@ apply_stretch_ratios <- function(daily_file = "precipitation_stretched.csv",
         "    \"total_stretched_precipitation\": ", round(sum(result$StretchedPrecipitation, na.rm = TRUE), 6), ",\n",
         "    \"average_stretch_ratio_nonzero\": ", round(mean(result$DailyStretchRatio[result$OriginalPrecipitation > 0], na.rm = TRUE), 6), ",\n",
         "    \"mass_balance_ratio\": ", round(sum(result$StretchedPrecipitation, na.rm = TRUE) / sum(result$OriginalPrecipitation, na.rm = TRUE), 6), ",\n",
-        "    \"sign_correction_applied\": ", tolower(as.character("Precipitation" %in% names(merged_data))), "\n",
+        "    \"sign_correction_applied\": ", tolower(as.character(daily_precip_available && "DailyPrecipitation" %in% names(merged_data))), "\n",
         "  },\n",
         "  \"generation_info\": {\n",
         "    \"date_generated\": \"", Sys.Date(), "\",\n",
@@ -237,7 +249,7 @@ apply_stretch_ratios <- function(daily_file = "precipitation_stretched.csv",
   cat("Records with non-zero precipitation:", sum(result$OriginalPrecipitation > 0, na.rm = TRUE), "\n")
   cat("Records with stretch ratios applied:", sum(result$OriginalPrecipitation > 0 & result$DailyStretchRatio != 1.0, na.rm = TRUE), "\n")
   cat("Records with missing stretch ratios (set to 1.0):", missing_ratios, "\n")
-  cat("Sign correction applied:", if ("Precipitation" %in% names(merged_data)) "Yes" else "No", "\n")
+  cat("Sign correction applied:", if (daily_precip_available && "DailyPrecipitation" %in% names(merged_data)) "Yes" else "No", "\n")
   cat("Threshold value used in daily aggregation:", if (!is.na(threshold_value)) threshold_value else "not available", "\n")
   cat("Date range:", as.character(min(as.Date(merged_data$date_only), na.rm = TRUE)), 
       "to", as.character(max(as.Date(merged_data$date_only), na.rm = TRUE)), "\n")
