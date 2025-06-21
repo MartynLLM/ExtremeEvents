@@ -3,5 +3,5 @@
 .RData
 .Ruserdata
 *.csv
-dailyPrecipitation.csv
+*.json
 ExampleData/
