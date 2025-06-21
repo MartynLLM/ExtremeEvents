@@ -9,6 +9,6 @@ All calculations work on daily precipitation values. If the input time series is
 
 Once a daily precipitation time series is available, it can be stretched using stretch_mass_balance.r
 
-Finally, daily stretch values can be applied to sub-daily using subDailyStretch.r
+Finally, daily stretch values can be applied to sub-daily using StretchSubDailyPrecipitation.r
 
 
